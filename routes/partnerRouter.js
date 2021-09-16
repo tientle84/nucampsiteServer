@@ -2,10 +2,12 @@ const express = require("express");
 const Partner = require("../models/partner");
 const authenticate = require("../authenticate");
 const partnerRouter = express.Router();
+const cors = require("./cors");
 
 partnerRouter
     .route("/")
-    .get((req, res, next) => {
+    .options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
+    .get(cors.cors, (req, res, next) => {
         Partner.find()
             .then((partners) => {
                 res.status(200).json(partners);
@@ -13,6 +15,7 @@ partnerRouter
             .catch((err) => next(err));
     })
     .post(
+        cors.corsWithOptions,
         authenticate.verifyUser,
         authenticate.verifyAdmin,
         (req, res, next) => {
@@ -24,10 +27,16 @@ partnerRouter
                 .catch((err) => next(err));
         }
     )
-    .put(authenticate.verifyUser, (req, res) => {
-        res.status(403).end("PUT operation not supported on /partners");
-    })
+    .put(
+        cors.corsWithOptions,
+        authenticate.verifyUser,
+        authenticate.verifyAdmin,
+        (req, res) => {
+            res.status(403).end("PUT operation not supported on /partners");
+        }
+    )
     .delete(
+        cors.corsWithOptions,
         authenticate.verifyUser,
         authenticate.verifyAdmin,
         (req, res, next) => {
@@ -41,19 +50,26 @@ partnerRouter
 
 partnerRouter
     .route("/:partnerId")
-    .get((req, res, next) => {
+    .options(cors.corsWithOptions, (req, res) => res.sendStatus(200))
+    .get(cors.cors, (req, res, next) => {
         Partner.findById(req.params.partnerId)
             .then((partner) => {
                 res.status(200).json(partner);
             })
             .catch((err) => next(err));
     })
-    .post(authenticate.verifyUser, (req, res) => {
-        res.status(403).end(
-            `POST operation not supported on /partners/${req.params.partnerId}`
-        );
-    })
+    .post(
+        cors.corsWithOptions,
+        authenticate.verifyUser,
+        authenticate.verifyAdmin,
+        (req, res) => {
+            res.status(403).end(
+                `POST operation not supported on /partners/${req.params.partnerId}`
+            );
+        }
+    )
     .put(
+        cors.corsWithOptions,
         authenticate.verifyUser,
         authenticate.verifyAdmin,
         (req, res, next) => {
@@ -71,6 +87,7 @@ partnerRouter
         }
     )
     .delete(
+        cors.corsWithOptions,
         authenticate.verifyUser,
         authenticate.verifyAdmin,
         (req, res, next) => {
